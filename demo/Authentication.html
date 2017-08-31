@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8" />
+    <base />
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <link href="css/bootstrap-theme.min.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/cumin.css" rel="stylesheet">
+    <script language="JavaScript" src="js/Cumin.js"></script>
+    <script>
+        var json ={
+            "auth_normal":0,
+            "auth_age":0,
+            "auth_time":0,
+            "auth_creator":0,
+            "IsAdmin":0
+        };
+        Start(function () {
+            //AuthDomRender("/account/");
+            //自动申请http://localhost:80/account/Authentication 路由
+            //返回json:
+            /*
+                {
+                    "auth_id":0,
+                    "auth_name":0,
+                    "auth_age":0,
+                    "auth_time":0,
+                    "auth_creator":0,
+                    "IsAdmin":0
+                }
+            */
+           //标签属性为0的节点会被删除
+           AuthRender(json);
+        });
+    </script>
+</head>
+
+<body>
+    <div class="cumin-div">
+        <div class="form-group">
+            <div class="col-sm-offset-5">
+                <h1> 前端权限过滤 </h1>
+            </div>
+        </div>
+    </div>
+    <div class="cumin-div">
+        <button auth="auth_normal">Auth_Id</button>
+        <button auth="auth_normal">Auth_Name</button>
+        <button auth="auth_time">Auth_Time</button>
+        <button auth="auth_creator">Auth_Creater</button>
+        <button auth="auth_admin">Admin</button>
+    </div>
+</body>
+
+</html>

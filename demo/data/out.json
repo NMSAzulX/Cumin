@@ -1,0 +1,35 @@
+{
+    "Sex": 
+    [
+        {
+            "sex_text": "男",
+            "sex_value": 1
+        },
+        {
+            "sex_text": "女",
+            "sex_value": 0
+        }
+    ],
+    "Other":[
+        {
+            "any_field":"a",
+            "any_value":0
+        },
+        {
+            "any_field":"b",
+            "any_value":1
+        },
+        {
+            "any_field":"c",
+            "any_value":2
+        },
+        {
+            "any_field":"d",
+            "any_value":3
+        },
+        {
+            "any_field":"e",
+            "any_value":4
+        }
+    ]
+}

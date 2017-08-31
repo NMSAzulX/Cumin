@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="utf-8" />
+    <base />
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <link href="css/bootstrap-theme.min.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/cumin.css" rel="stylesheet">
+    <script language="JavaScript" src="js/Cumin.js"></script>
+
+    <script>
+        var json = [{
+                "Name": "小明",
+                "Age": 10,
+                "Sex": 1,
+                "Other": "a"
+            },
+            {
+                "Name": "小杨",
+                "Age": 20,
+                "Sex": 1,
+                "Other": "b"
+            },
+            {
+                "Name": "小红",
+                "Age": 30,
+                "Sex": 0,
+                "Other": "c"
+            },
+            {
+                "Name": "小狗",
+                "Age": 40,
+                "Sex": 0,
+                "Other": "d"
+            }
+        ]
+        var out = {
+            "Sex": [{
+                    "sex_text": "男",
+                    "sex_value": 1
+                },
+                {
+                    "sex_text": "女",
+                    "sex_value": 0
+                }
+            ],
+            "Other": [{
+                    "any_field": "a",
+                    "any_value": 0
+                },
+                {
+                    "any_field": "b",
+                    "any_value": 1
+                },
+                {
+                    "any_field": "c",
+                    "any_value": 2
+                },
+                {
+                    "any_field": "d",
+                    "any_value": 3
+                },
+                {
+                    "any_field": "e",
+                    "any_value": 4
+                }
+            ]
+        }
+        var events = {
+            "Name":function(data, node, cloneNode){
+                alert("Name is " + data["Name"]);
+            }
+        }
+        Start(function () {
+            O("#AjaxTable")
+            .SortEvent(function(index, data, sortNode, cloneNode){
+
+                alert("SortNumber is " + index);
+
+            })
+            .On("Name",function(node){
+
+                node.style.backgroundColor = "rgba(205, 221, 249, 0.65)";
+
+            })
+            .Out("Name",function(node){
+
+                node.style.backgroundColor = null;
+
+            })
+            .Click("Age",function(node){
+
+                alert("Age is " + node.innerHTML);
+
+            })
+            .MapEvents(events)
+            .Bind(json, out);
+
+        });
+    </script>
+</head>
+
+<body>
+    <div class="cumin-div">
+        <div class="form-group">
+            <div class="col-sm-offset-5">
+                <h1> 事件绑定 </h1>
+            </div>
+        </div>
+    </div>
+    <div class="cumin-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>名字</th>
+                    <th>年龄</th>
+                    <th>性别</th>
+                    <th>其他</th>
+                </tr>
+            </thead>
+            <tbody id="AjaxTable">
+                <tr template>
+                    <td sortnumber></td>
+                    <td field="Name"></td>
+                    <td field="Age"></td>
+                    <td>
+                        <select field="Sex" out outMap="sex_value">
+                            <option template SelectText="sex_text" field="sex_value" />
+                        </select>
+                    </td>
+                    <td>
+                        <select field="Other" out outMap="any_field">
+                            <option template SelectText="any_field" field="any_value" />
+                        </select>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

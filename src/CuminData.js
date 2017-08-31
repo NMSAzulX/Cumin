@@ -1,11 +1,5 @@
 ﻿/**********************************Load Execute********************************/
 window.addEventListener("load", function () {
-    InitTemplate();
-});
-/**
- * 初始化需要运行的函数
- */
-function InitTemplate() {
     JudgeAgent();
     CuminFlag = CuminFlagClass.CreateInstance();
     var nodes = document.querySelectorAll("[template]");
@@ -21,7 +15,7 @@ function InitTemplate() {
             nodes[index].removeAttribute("hide");
         }(i));
     }
-}
+});
 
 function JudgeAgent() {
     var userAgent = navigator.userAgent;
@@ -111,6 +105,7 @@ var CuminFlagClass = {
         handler.PageField = "PageIndex";
         handler.Send_PageCount = "pageSize";
         handler.Send_PageIndex = "page";
+        handler.Auth = "auth";
         return handler;
     }
 }
@@ -126,7 +121,7 @@ var CuminDataClass = {
 		 */
         
         var root = document.querySelector(nodeName);
-        var map = root.getAttribute(CuminFlag.OutMap);
+        var map = root.getAttribute(CuminFlag.Content);
         if (map == null) {
             name = nodeName;
         } else {
@@ -144,15 +139,18 @@ var CuminDataClass = {
         }
 
         var handler = {};
-
-        handler.Index = 0; //Cumin索引
+        if(index==null){
+            index=0;
+        }
+        handler.Index = index; //Cumin索引
         handler.RootName = nodeName; //根节点名称
         handler.CurrentNode = nodeName; //当前节点
         handler.Root = root;
         handler.Converts = null;
         handler.MapEvents = null;
         handler.SortNumberEvents = null;
-        handler.OutMap = map;
+        handler.OutMap = root.getAttribute(CuminFlag.OutMap);
+        handler.SortNumber = 0;
 		/**
 		 * 获取节点实例，并缓存当前类实例
 		 */
@@ -167,7 +165,7 @@ var CuminDataClass = {
 		/**
 		 * 设置拼接符号
 		 */
-        handler.SpliteChar = ",";
+        handler.SpliteChar = ";";
         handler.SetSpliteChar = function (spliteChar) {
             this.SpliteChar = spliteChar;
         }
@@ -256,8 +254,9 @@ var CuminDataClass = {
 		/**
 		 * 序号事件
 		 */
-        handler.AddSortNumberEvents = function (func) {
+        handler.AddSortNumberEvent = function (func) {
             this.SortNumberEvents = func;
+            return this;
         }
 
 		/**
@@ -324,7 +323,8 @@ var CuminDataClass = {
                 if (this.IsSelect) {
                     this.SelectBind(data);
                 } else {
-                    this.NormalBind(data, 1, out);
+                    this.SortNumber+=1;
+                    this.NormalBind(data, this.SortNumber, out);
                 }
             }
             return this;
@@ -373,7 +373,6 @@ var CuminDataClass = {
             var clone = this.Model.cloneNode(true);
             clone.setAttribute(CuminFlag.Flag, this.Index);
             clone.removeAttribute(this.Template);
-            this.SetUnique(clone, data);
             handler.BindToNode.appendChild(clone);
             return clone;
         }
@@ -392,16 +391,38 @@ var CuminDataClass = {
 		/**
 		 * 	绑定正常节点
 		 */
+        handler.TriggerEvents = new Array();
         handler.NormalBind = function (data, index, out) {
             var clone = this.Private_SetCommond(data);
-            this.UpdateCurrentNode(data, index, out, this.RootName + " [" + CuminFlag.Flag + "=\"" + this.Index + "\"]", true);
             var operatorNodes = document.querySelectorAll(this.RootName + " [" + CuminFlag.Flag + "=\"" + this.Index + "\"] [" + CuminFlag.Operator + "]");
-            for (var index = 0; index < operatorNodes.length; index++) {
-                (function (i) {
-                    operatorNodes[i].setAttribute(CuminFlag.Operator, handler.Index);
-                    operatorNodes[i].Tag = clone;
-                })(index);
+            for (var i = 0; i < operatorNodes.length; i++) {
+                (function (j) {
+                    var node = operatorNodes[j];
+                    
+                    var content = "";
+                    if(node.tagName=="INPUT" && node.tagName=="SELECT"){
+                        content = node.Value;
+                    }else{
+                        content = node.innerHTML;
+                    }
+                    node.setAttribute(CuminFlag.Operator, handler.Index);
+                    node.Tag = clone;
+                    node.addEventListener("click", function () {
+                        var ctxValue = node.getAttribute(CuminFlag.Operator);
+                        handler.CurrentNode = handler.RootName + " [" + CuminFlag.Flag + "=\"" + ctxValue + "\"]";
+                        var jsonArray = node.getAttribute(CuminFlag.OperatorValues);
+                        var spicalDict =  null;
+                        if(jsonArray!=null){
+                            spicalDict = jsonArray.split(";");
+                        }
+                        var submitData = GetNodeJson(handler.CurrentNode, handler.IsClearJson, spicalDict);
+                        if(handler.TriggerEvents.hasOwnProperty(content)){
+                            handler.TriggerEvents[content](submitData, node);
+                        }
+                    });
+                })(i);
             }
+            this.UpdateCurrentNode(data, index, out, this.RootName + " [" + CuminFlag.Flag + "=\"" + this.Index + "\"]", true, clone);
         }
 
 		/**
@@ -472,7 +493,7 @@ var CuminDataClass = {
 
 
 
-        handler.UpdateCurrentNode = function (data, index, out, uniqueFlag, isClone) {
+        handler.UpdateCurrentNode = function (data, index, out, uniqueFlag, isClone, cloneNode) {
 
             if (uniqueFlag == null) {
                 if (this.CurrentNode == null) {
@@ -489,10 +510,14 @@ var CuminDataClass = {
             var sortNode = document.querySelector(sort);
             if (sortNode != null) {
                 sortNode.innerHTML = index;
-                if (handler.SortNumberEvents != null) {
+                handler.SortNumber = index;
+                if (this.SortNumberEvents != null) {
                     sortNode.addEventListener("click", function () {
-                        handler.SortNumberEvents(index, data, sortNode, handler);
+                        handler.SortNumberEvents(index, data, sortNode, cloneNode);
                     });
+                }
+                if (this.Converts.hasOwnProperty(CuminFlag.SortNumber)) {
+                    this.Converts[CuminFlag.SortNumber](index, data, sortNode, cloneNode);
                 }
             }
 
@@ -526,6 +551,7 @@ var CuminDataClass = {
             for (var i = 0; i < operatorNodes.length; i++) {
                 (function (index) {
                     var node = operatorNodes[index];
+                    handler.SetUnique(node, data);
                     var key = null;
                     if (node.tagName == "INPUT" || node.tagName == "SELECT") {
                         key = node.value;
@@ -533,7 +559,7 @@ var CuminDataClass = {
                         key = node.innerHTML;
                     }
                     if (handler.Converts.hasOwnProperty(key)) {
-                        handler.Converts[key](key, data, node, this);
+                        handler.Converts[key](key, data, node, cloneNode);
                     }
                 })(i);
             }
@@ -549,7 +575,7 @@ var CuminDataClass = {
                     handler.Private_BindEvent(key, node);
                     //设置Field
                     if (data.hasOwnProperty(key)) {
-                        var r_data = handler.Data(key, data, node);
+                        var r_data = handler.Data(key, data, node, cloneNode);
                         if (r_data != null) {
                             if (node.tagName == "INPUT") {
                                 node.value = r_data;
@@ -563,7 +589,7 @@ var CuminDataClass = {
                         //如果有映射事件，则添加映射事件
                         if (handler.MapEvents.hasOwnProperty(key)) {
                             node.addEventListener("click", function () {
-                                handler.MapEvents[key](data, node, this);
+                                handler.MapEvents[key](data, node, cloneNode);
                             });
                         }
                     }
@@ -604,9 +630,10 @@ var CuminDataClass = {
             if (out != null) {
                 for (var j = 0; j < outNodes.length; j++) {
                     (function (index) {
+                        handler.SetUnique(outNodes[index], data);
                         var key = outNodes[index].getAttribute(CuminFlag.Content);
                         handler.Private_BindEvent(key, outNodes[index]);
-                        var r_data = handler.Data(key, data, outNodes[index]);
+                        var r_data = handler.Data(key, data, outNodes[index], cloneNode);
                         if (r_data != null) {
                             outNodes[index].setAttribute(CuminFlag.Out, r_data);
                             if (out.hasOwnProperty(key)) {
@@ -624,10 +651,10 @@ var CuminDataClass = {
 		/**
 		 *   数据处理
 		 */
-        handler.Data = function (key, data, node) {
+        handler.Data = function (key, data, node, cloneNode) {
             var result = data[key];
             if (this.Converts.hasOwnProperty(key)) {
-                result = this.Converts[key](result, data, node, this);
+                result = this.Converts[key](result, data, node, cloneNode);
             }
             return result;
         }
@@ -682,30 +709,10 @@ var CuminDataClass = {
             }
             return this;
         }
+
+        
         handler.Trigger = function (name, func) {
-            var operatorNodes = document.querySelectorAll(this.RootName + " [" + CuminFlag.Flag + "] [" + CuminFlag.Operator + "]");
-            if (operatorNodes == null || operatorNodes.length == 0) { return this; };
-            var dict = operatorNodes[0].getAttribute(CuminFlag.OperatorValues);
-            var spicalDict = null;
-            if (IsNotNull(dict)) {
-                spicalDict = dict.split(";");
-            }
-            for (var index = 0; index < operatorNodes.length; index++) {
-                (function (i) {
-                    var node = operatorNodes[i];
-                    if (node.innerHTML == name) {
-                        if (node.CuminClickEvent == null) {
-                            node.addEventListener("click", function () {
-                                var ctxValue = node.getAttribute(CuminFlag.Operator);
-                                handler.CurrentNode = handler.RootName + " [" + CuminFlag.Flag + "=\"" + ctxValue + "\"]";
-                                var data = GetNodeJson(handler.CurrentNode, handler.IsClearJson, spicalDict);
-                                node.CuminClickEvent(data, node);
-                            });
-                        }
-                        node.CuminClickEvent = func;
-                    }
-                })(index)
-            }
+            this.TriggerEvents[name]=func;
             return this;
         }
 
@@ -790,9 +797,6 @@ var CuminDataClass = {
                 var values = tNode.getAttribute(CuminFlag.Unique).split(this.SpliteChar);
 
                 for (var index = 0; index < nodes.length; index++) {
-                    if (index == 0) {
-                        continue;
-                    }
                     (function (i) {
                         var node = nodes[i];
                         for (var j = 0; j < out.length; j++) {
@@ -802,7 +806,10 @@ var CuminDataClass = {
                                 if (handler.UniqueIsMatch(values, n_data, r_data)) {
                                     var r_data = handler.Data(key, out[n_index], node);
                                     if (r_data != null) {
-                                        if (node.tagName == "INPUT") {
+                                        if (node.tagName == "INPUT" || node.tagName=="SELECT") {
+                                            if(node.getAttribute(CuminFlag.OutMap)!=null){
+                                                node.setAttribute(CuminFlag.Out,r_data);
+                                            }
                                             node.value = r_data;
                                         } else {
                                             node.innerHTML = r_data;
@@ -923,7 +930,7 @@ var CuminAjaxClass = {
             var json = null;
             var shut = true;
 
-            if (status == 0) { return; }
+            if (handler.xmlhttp.readyState != 4) { return; }
 
             if (handler.toJson) {
 
@@ -935,7 +942,7 @@ var CuminAjaxClass = {
                 json = handler.xmlhttp.responseText;
             }
 
-            if (handler.xmlhttp.readyState == 4 && status == 200) {
+            if (status == 200 || status == 0 ) {
 
                 for (var i = 0; i < AjaxFilter.length; i++) {
                     shut = AjaxFilter[i](status, json);
@@ -1819,6 +1826,7 @@ function Value(nodeName) {
     return null;
 }
 
+
 /**
  * 清除对象的值
  * @param {string} nodeName 元素名称（选择器）
@@ -1895,4 +1903,34 @@ function ClearWarning(node) {
         window.clearTimeout(node.BorderHandler);
         node.BorderHandler = null;
     }
+}
+
+
+/**
+ * 根据后端json进行前端渲染
+ * @param {object} json 后端json
+ */
+function AuthRender(json) {
+    for (var key in json) {
+        if (json[key] == 0) {
+            var nodes = document.querySelectorAll("[" + CuminFlag.Auth + "=\"" + key + "\"]");
+            if (nodes != null) {
+                for (var i = 0; i < nodes.length; i++) {
+                    (function (index) {
+                        var node = nodes[i];
+                        Delete(node);
+                    })(i)
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 获取当前页面文件名
+ */
+function PageName() {
+    var currentUrls = location.href.split("/");
+    var fileName = currentUrls.slice(currentUrls.length - 1, currentUrls.length).toString(String).split(".");
+    return fileName.slice(0, 1);
 }

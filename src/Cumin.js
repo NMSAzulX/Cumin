@@ -8,7 +8,6 @@ document.write("<script language='JavaScript' src='js/validate.js'></script>");
 
 window.addEventListener("load", function () {
     G = O();
-	InitTemplate();
 	BaseServer = "http://" + window.location.host;
     CuminAjax().AddFilter(IsBackHome);
 
@@ -52,7 +51,7 @@ function CloseBootstrapModal(name) {
 /***********************************Lib: Operator************************************/
 var reg_http = new RegExp("^.*(.asp|.aspx|.do|.ashx|.webp)$");
 var reg_webapi = new RegExp("(/.+)+");
-var reg_base = new RegExp("(http://|https://).*");
+var reg_base = new RegExp("(http://|https://|file:///).*");
 var reg_ws = new RegExp("(ws://|wss://).*");
 var WebSocketCache = new Array();
 var CuminDataBindClass = {　　　　
@@ -62,6 +61,7 @@ var CuminDataBindClass = {　　　　
 
 		handler.BindTo = parameter;
 		handler.TemplateName = null;
+		handler.SortNumberEvent = null;
 		handler.Convertor = null;
 		handler.MapEvents = null;
 		handler.Url = null;
@@ -69,7 +69,8 @@ var CuminDataBindClass = {　　　　
 		handler.IsGet = false;
 		handler.WebSocket = null;
 
-		if (reg_ws.test(parameter)) {
+
+		 if (reg_ws.test(parameter)) {
 
 			handler.Url = parameter;
 			var websocket = CuminWebSocket(parameter);
@@ -104,7 +105,7 @@ var CuminDataBindClass = {　　　　
 			return this;
 		}
 		handler.Page = function (totle, per_count) {
-			CuminPage("#PageShow").Items(this.PageCount).Page(totle, per_count);
+			CuminPage(this.BindTo).Items(this.PageCount).Page(totle, per_count);
 			return this;
 		}
 
@@ -207,7 +208,7 @@ var CuminDataBindClass = {　　　　
                     CuminAjax().ToJson(true).SetSucceed(function (status, msg) {
                         if (msg.hasOwnProperty("code")) {
                             if (msg.code == 1) {
-                                O(nodeName).BeforeBind(this.BeforeCallBack).Convertor(this.Convertor).MapEvents(this.MapEvents).Bind(msg, out);
+								O(nodeName).Bind(msg, out);
                             }
                         }
 					}).UseGet(this.Url).Submit(this.AjaxData);
@@ -223,7 +224,7 @@ var CuminDataBindClass = {　　　　
 					CuminAjax().ToJson(true).SetSucceed(function (status, msg) {
                         if (msg.hasOwnProperty("code")) {
                             if (msg.code == 1) {
-                                O(nodeName).BeforeBind(this.BeforeCallBack).Convertor(this.Convertor).MapEvents(this.MapEvents).Bind(msg, out);
+                                O(nodeName).Bind(msg, out);
                             }
                         }
 					}).UsePost(this.Url).Submit(this.AjaxData);
@@ -308,6 +309,10 @@ var CuminDataBindClass = {　　　　
 			this.TemplateName = templateName;
 			return this;
 		}
+		handler.SortEvent = function(func){
+			this.SortNumberEvent =func;
+			return this;
+		}
 		handler.Clear = function () {
 			if (this.TemplateName == null) {
 				this.TemplateName = this.BindTo;
@@ -333,7 +338,7 @@ var CuminDataBindClass = {　　　　
 					temp.innerHTML = data;
 				}
 			} else {
-				temp.BeforeBind(this.BeforeCallBack).AddConvertObject(this.Convertor).AddEventsObject(this.MapEvents).Bind(data, out, this.BindTo);
+				temp.AddSortNumberEvent(this.SortNumberEvent).BeforeBind(this.BeforeCallBack).AddConvertObject(this.Convertor).AddEventsObject(this.MapEvents).Bind(data, out, this.BindTo);
 			}
 
 			return this;
@@ -342,7 +347,7 @@ var CuminDataBindClass = {　　　　
 			if (this.TemplateName == null) {
 				this.TemplateName = this.BindTo;
 			}
-			CuminData(this.TemplateName).BeforeBind(this.BeforeCallBack).AddConvertObject(this.Convertor).AddEventsObject(this.MapEvents).Append(data, out, this.BindTo);
+			CuminData(this.TemplateName).AddSortNumberEvent(this.SortNumberEvent).BeforeBind(this.BeforeCallBack).AddConvertObject(this.Convertor).AddEventsObject(this.MapEvents).Append(data, out, this.BindTo);
 			return this;
 		}
 
@@ -488,7 +493,9 @@ function V(constraints) {
         VaildConstraints[key] = temp_valid;
     }
 }
-
+function Start(func){
+	window.addEventListener("load",func);
+}
 function GetNodeData(dataHandler) {
 	if (dataHandler == null) {
 		return null;
@@ -511,5 +518,17 @@ function GetNodeData(dataHandler) {
 	} else {
 		return dataHandler;
 	}
+}
 
+/**
+ * 根据权限进行渲染
+ * @param {string} route 路由
+ * @param {string} pageName 当前页面
+ */
+function AuthDomRender(route) {
+    O(route + PageName()).Get().JsonDo(function (status, msg) {
+        if (msg.code == 1) {
+            AuthRender(msg.data);
+        }
+    });
 }

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="utf-8" />
+    <base />
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <link href="css/bootstrap-theme.min.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/cumin.css" rel="stylesheet">
+    <script language="JavaScript" src="js/Cumin.js"></script>
+
+    <script>
+        
+        Start(function () {
+            O("#StringData").Click(null,function(){
+                O("file:///J:/VsGit/Cumin/demo/data/out.json").Get().StringDo(function(status,msg){
+                    alert(msg);
+                },function(status,msg){
+                    alert("提交失败!（请检查URL）");
+                });
+            });
+
+            O("#JsonData").Click(null,function(){
+                O("file:///J:/VsGit/Cumin/demo/data/out.json").Get().JsonDo(function(status,msg){
+                    alert(msg);
+                },function(status,msg){
+                    alert("服务器：提交参数有误！")
+                    alert("提交失败!（请检查URL）");
+                });
+            });
+
+            //先获取外联数据
+            var outHandler = O("file:///J:/VsGit/Cumin/demo/data/out.json").Get().JsonDo(function(status,msg){
+                //获取主表数据，并与外联数据一起绑定
+                var handler  = O("file:///J:/VsGit/Cumin/demo/data/data.json").Get().JsonTo("#AjaxTable",msg);
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <div class="cumin-div">
+        <div class="form-group">
+            <div class="col-sm-offset-5">
+                <h1> 数据绑定 </h1>
+            </div>
+        </div>
+    </div>
+    <div class="cumin-div">
+        <button id="JsonData" class="btn default">Ajax请求JSON对象</button>
+        <button id="StringData" class="btn default">Ajax请求string结果</button>
+    </div>
+    <div class="cumin-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>名字</th>
+                    <th>年龄</th>
+                    <th>性别</th>
+                    <th>其他</th>
+                </tr>
+            </thead>
+            <tbody id="AjaxTable">
+                <tr template>
+                    <td sortnumber></td>
+                    <td field="Name"></td>
+                    <td field="Age"></td>
+                    <td>
+                        <select field="Sex" out outMap="sex_value">
+                            <option template SelectText="sex_text" field="sex_value" />
+                        </select>
+                    </td>
+                    <td>
+                        <select field="Other" out outMap="any_field">
+                            <option template SelectText="any_field" field="any_value" />
+                        </select>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

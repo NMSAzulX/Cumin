@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="utf-8" />
+    <base />
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <link href="css/bootstrap-theme.min.css" rel="stylesheet">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/cumin.css" rel="stylesheet">
+    <script language="JavaScript" src="js/Cumin.js"></script>
+
+    <script>
+       var valid_constraints =
+        {
+            Name: {
+                length: { is: 3 }
+            },
+            Age: {
+                presence:true
+            }
+        };
+        V(valid_constraints);
+
+        Start(function () {
+            valid_success = function (attr, node) {
+                ClearWarning(node);
+                node.nextElementSibling.innerHTML = "";
+            }
+
+            valid_error = function (error, node) {
+                Warning(node);
+                var field = node.getAttribute(CuminFlag.Content);
+                node.nextElementSibling.innerHTML = error[field][0];
+            }
+
+            O("#ValidateData").Click(null,function(){
+                var date = GetNodeData("#vaildData");
+                /*O("http://xxxx/").Get("#vaildData").StringDo(function(status,msg){
+                    alert(status);
+                });*/
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <div class="cumin-div">
+        <div class="form-group">
+            <div class="col-sm-offset-5">
+                <h1>  Ajax后台数据校验 </h1>
+            </div>
+        </div>
+    </div>
+    <div class="cumin-div">
+        <button id="ValidateData" class="btn default">点击验证</button>
+    </div>
+    <div class="cumin-div form-horizontal" id="vaildData">
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Name</label>
+            <div class="col-sm-2">
+                <input field="Name" class="form-control" type="text" json>
+                <span></span>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Age</label>
+            <div class="col-sm-2">
+                <input field="Age" class="form-control" type="text" json>
+                <span></span>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label">Descrption</label>
+            <div class="col-sm-2">
+                <input field="Description" class="form-control" type="text" json>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label">CreateTime</label>
+            <div class="col-sm-2">
+                <input field="CreateTime" class="form-control" type="text" json>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

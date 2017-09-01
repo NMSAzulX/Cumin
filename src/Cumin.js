@@ -3,7 +3,7 @@ var ErrorShow = null;
 var G = null;
 var VaildConstraints = new Array();
 
-document.write("<script language='JavaScript' src='js/CuminData.js'></script>");
+document.write("<script language='JavaScript' src='js/cuminData.js'></script>");
 document.write("<script language='JavaScript' src='js/validate.js'></script>");
 
 window.addEventListener("load", function () {

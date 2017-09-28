@@ -113,21 +113,59 @@ var CuminDataBindClass = {　　　　
 		/**
 		 * AJAX
 		 */
-		handler.Get = function (dataHandler) {
-			this.IsGet = true;
+        handler.FormGet = function (dataHandler) {
+            this.IsGet = true;
+            this.AjaxType = 0;
             this.AjaxData = GetNodeData(dataHandler);
-			return this;
-		}
-		handler.Post = function (dataHandler) {
+            return this;
+        }
+        handler.FormPost = function (dataHandler) {
             this.IsGet = false;
+            this.AjaxType = 0;
             this.AjaxData = GetNodeData(dataHandler);
-			return this;
+            return this;
+        }
+        handler.JsonGet = function (dataHandler) {
+            this.IsGet = true;
+            this.AjaxType = 1;
+            this.AjaxData = GetNodeData(dataHandler);
+            return this;
+        }
+        handler.JsonPost = function (dataHandler) {
+            this.IsGet = false;
+            this.AjaxType = 1;
+            this.AjaxData = GetNodeData(dataHandler);
+            return this;
+        }
+        handler.PlainGet = function (dataHandler) {
+            this.IsGet = true;
+            this.AjaxType = 2;
+            this.AjaxData = GetNodeData(dataHandler);
+            return this;
+        }
+        handler.PlainPost = function (dataHandler) {
+            this.IsGet = false;
+            this.AjaxType = 2;
+            this.AjaxData = GetNodeData(dataHandler);
+            return this;
+        }
+        handler.XmlGet = function (dataHandler) {
+            this.IsGet = true;
+            this.AjaxType = 3;
+            this.AjaxData = GetNodeData(dataHandler);
+            return this;
+        }
+        handler.XmlPost = function (dataHandler) {
+            this.IsGet = false;
+            this.AjaxType = 3;
+            this.AjaxData = GetNodeData(dataHandler);
+            return this;
         }
         handler.StringDo = function (succeed_func, failed_func) {
             if (CuminAjaxTimeOut) { return; };
             if (this.IsGet) {
                 try {
-                    CuminAjax().ToJson(false).SetSucceed(succeed_func).SetFailed(failed_func).UseGet(this.Url).Submit(this.AjaxData);
+                    CuminAjax().ToJson(false).SetSucceed(succeed_func).SetFailed(failed_func).UseGet(this.Url).TypeSubmit(this.AjaxData,this.AjaxType);
                 } catch (e) {
                     console.error(e);
                     e.message = "请检查地址和网络！";
@@ -137,7 +175,7 @@ var CuminDataBindClass = {　　　　
                 }
             } else {
                 try {
-                    CuminAjax().ToJson(false).SetSucceed(succeed_func).SetFailed(failed_func).UsePost(this.Url).Submit(this.AjaxData);
+                    CuminAjax().ToJson(false).SetSucceed(succeed_func).SetFailed(failed_func).UsePost(this.Url).TypeSubmit(this.AjaxData, this.AjaxType);
                 } catch (e) {
                     console.error(e);
                     e.message = "请检查地址和网络！";
@@ -147,11 +185,11 @@ var CuminDataBindClass = {　　　　
                 }
             }
         }
-        handler.JsonDo = function (succeed_func,failed_func) {
+        handler.JsonDo = function (succeed_func, failed_func) {
             if (CuminAjaxTimeOut) { return; };
             if (this.IsGet) {
                 try {
-                    CuminAjax().ToJson(true).SetSucceed(succeed_func).SetFailed(failed_func).UseGet(this.Url).Submit(this.AjaxData);
+                    CuminAjax().ToJson(true).SetSucceed(succeed_func).SetFailed(failed_func).UseGet(this.Url).TypeSubmit(this.AjaxData, this.AjaxType);
                 } catch (e) {
                     console.error(e);
                     e.message = "请检查地址和网络！";
@@ -161,7 +199,7 @@ var CuminDataBindClass = {　　　　
                 }
             } else {
                 try {
-                    CuminAjax().ToJson(true).SetSucceed(succeed_func).SetFailed(failed_func).UsePost(this.Url).Submit(this.AjaxData);
+                    CuminAjax().ToJson(true).SetSucceed(succeed_func).SetFailed(failed_func).UsePost(this.Url).TypeSubmit(this.AjaxData, this.AjaxType);
                 } catch (e) {
                     console.error(e);
                     e.message = "请检查地址和网络！";
@@ -172,71 +210,71 @@ var CuminDataBindClass = {　　　　
             }
         }
 
-		handler.StringTo = function (nodeName) {
-			if (CuminAjaxTimeOut) {return;};
-			if (this.IsGet) {				
-				try {
-					CuminAjax().ToJson(false).SetSucceed(function (status, msg) {
-						O(nodeName).Bind(msg);
-					}).UseGet(this.Url).Submit(this.AjaxData);
+        handler.StringTo = function (nodeName) {
+            if (CuminAjaxTimeOut) { return; };
+            if (this.IsGet) {
+                try {
+                    CuminAjax().ToJson(false).SetSucceed(function (status, msg) {
+                        O(nodeName).Bind(msg);
+                    }).UseGet(this.Url).TypeSubmit(this.AjaxData, this.AjaxType);
                 } catch (e) {
                     console.error(e);
-					e.message = "请检查地址和网络！";
+                    e.message = "请检查地址和网络！";
                     if (ErrorShow != null) {
                         ErrorShow(e);
-					}
-				}
-			} else {
-				try {
-					CuminAjax().ToJson(false).SetSucceed(function (status, msg) {
-						O(nodeName).Bind(msg);
-					}).UsePost(this.Url).Submit(this.AjaxData);
+                    }
+                }
+            } else {
+                try {
+                    CuminAjax().ToJson(false).SetSucceed(function (status, msg) {
+                        O(nodeName).Bind(msg);
+                    }).UsePost(this.Url).TypeSubmit(this.AjaxData, this.AjaxType);
                 } catch (e) {
                     console.error(e);
-					e.message = "请检查地址和网络！";
+                    e.message = "请检查地址和网络！";
                     if (ErrorShow != null) {
                         ErrorShow(e);
-					}
-				}
-			}
-			return this;
-		}
-		handler.JsonTo = function (nodeName,out) {
-			if (CuminAjaxTimeOut) {return;};
-			if (this.IsGet) {
-				try {
+                    }
+                }
+            }
+            return this;
+        }
+        handler.JsonTo = function (nodeName, out) {
+            if (CuminAjaxTimeOut) { return; };
+            if (this.IsGet) {
+                try {
                     CuminAjax().ToJson(true).SetSucceed(function (status, msg) {
-                        if (msg.hasOwnProperty("code")) {
-                            if (msg.code == 1) {
-								O(nodeName).Bind(msg, out);
-                            }
-                        }
-					}).UseGet(this.Url).Submit(this.AjaxData);
-                } catch (e) {
-                    console.error(e);
-					e.message = "请检查地址和网络！";
-                    if (ErrorShow != null) {
-                        ErrorShow(e);
-					}
-				}
-			} else {
-				try {
-					CuminAjax().ToJson(true).SetSucceed(function (status, msg) {
                         if (msg.hasOwnProperty("code")) {
                             if (msg.code == 1) {
                                 O(nodeName).Bind(msg, out);
                             }
                         }
-					}).UsePost(this.Url).Submit(this.AjaxData);
+                    }).UseGet(this.Url).TypeSubmit(this.AjaxData, this.AjaxType);
                 } catch (e) {
                     console.error(e);
-					e.message = "请检查地址和网络！";
+                    e.message = "请检查地址和网络！";
                     if (ErrorShow != null) {
                         ErrorShow(e);
-					}
-				}
-			}
-			return this;
+                    }
+                }
+            } else {
+                try {
+                    CuminAjax().ToJson(true).SetSucceed(function (status, msg) {
+                        if (msg.hasOwnProperty("code")) {
+                            if (msg.code == 1) {
+                                O(nodeName).Bind(msg, out);
+                            }
+                        }
+                    }).UsePost(this.Url).TypeSubmit(this.AjaxData, this.AjaxType);
+                } catch (e) {
+                    console.error(e);
+                    e.message = "请检查地址和网络！";
+                    if (ErrorShow != null) {
+                        ErrorShow(e);
+                    }
+                }
+            }
+            return this;
         }
 
         handler.NotifyTo = function (nodeName) {
@@ -249,7 +287,7 @@ var CuminDataBindClass = {　　　　
                                 G.Notify(nodeName, msg);
                             }
                         }
-                    }).UseGet(this.Url).Submit(this.AjaxData);
+                    }).UseGet(this.Url).TypeSubmit(this.AjaxData, this.AjaxType);
                 } catch (e) {
                     console.error(e);
                     e.message = "请检查地址和网络！";
@@ -265,7 +303,7 @@ var CuminDataBindClass = {　　　　
                                 G.Notify(nodeName, msg);
                             }
                         }
-                    }).UsePost(this.Url).Submit(this.AjaxData);
+                    }).UsePost(this.Url).TypeSubmit(this.AjaxData, this.AjaxType);
                 } catch (e) {
                     console.error(e);
                     e.message = "请检查地址和网络！";

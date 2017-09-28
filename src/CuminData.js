@@ -903,15 +903,9 @@ var CuminAjaxClass = {
     CreateInstance: function () {
 
         var handler = {};
-        handler.xmlhttp = null;
+        handler.xmlhttp = new XMLHttpRequest();
         handler.toJson = false;
-        if (window.XMLHttpRequest) {
-            // code for IE7+, Firefox, Chrome, Opera, Safari
-            handler.xmlhttp = new XMLHttpRequest();
-        } else {
-            // code for IE6, IE5
-            handler.xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-        }
+        handler.ajaxType = null;
 
         handler.AddFilter = function (func) {
             AjaxFilter[AjaxFilter.length] = func;
@@ -925,6 +919,7 @@ var CuminAjaxClass = {
             this.toJson = shut;
             return this;
         }
+
         handler.xmlhttp.onreadystatechange = function () {
             var status = handler.xmlhttp.status;
             var json = null;
@@ -934,7 +929,6 @@ var CuminAjaxClass = {
 
             if (handler.toJson) {
 
-                //console.log(handler.xmlhttp.responseText);
                 json = JSON.parse(handler.xmlhttp.responseText);
 
             } else {
@@ -999,59 +993,107 @@ var CuminAjaxClass = {
             this.RequestUrl = url;
             return this;
         }
+        //1 form //2 json //3 xml //4 urlencode
+        handler.ChoiceSubmitType = function (i) {
+            if (i == 0) {
+                this.ajaxType = "multipart/form-data;";
+            } else if (i==1) {
+                this.ajaxType = "application/json;charset=utf-8";
+            } else if (i==2) {
+                this.ajaxType = "text/plain;charset=utf-8";
+            } else if (i==3) {
+                this.ajaxType = "text/xml;charset=utf-8";
+            } else {
+                this.ajaxType = "application/x-www-form-urlencoded;charset=utf-8";
+            }
+        }
+        //表单发送方式
+        handler.FormSubmit = function (data) {
+            var result = data;
+            if (typeof (data) == "string") {
+                result = JSON.parse(data);
+            }
+            var formData = new FormData();
+            for (var key in result) {
+                formData.append(key, result[key]);
+            }
+            this.ChoiceSubmitType(0);
+            this.Submit(formData);
+        }
+        //Json发送方式
+        handler.JsonSubmit = function (data) {
+            var result = data;
+            if (typeof (data) != "string") {
+                result = JSON.stringify(data);
+            }
+            this.ChoiceSubmitType(1);
+            this.Submit(result);
+        }
+        //url-Json发送方式
+        handler.UJsonSubmit = function (data) {
+            var result = data;
+            if (typeof (data) != "string") {
+                result = JSON.stringify(data);
+            }
+            this.ChoiceSubmitType(4);
+            this.Submit(result);
+        }
+        //plain发送方式
+        handler.PlainSubmit = function (data) {
+            var result = data;
+            if (typeof (data) == "string") {
+                result = JSON.parse(data);
+            }
+            var sdata = null;
+            for (var key in result) {
+                sdata += key + "=" + result[key] + " ";
+            }
+            this.ChoiceSubmitType(2);
+            this.Submit(sdata);
+        }
+         //xml发送方式
+        handler.XmlSubmit = function (data) {
+            this.ChoiceSubmitType(3);
+            this.Submit(data);
+        }
         //发送请求
         handler.Submit = function (data) {
             var parameters = "";
             if (this.RequestMethod == "GET") {
                 parameters = DealGetParameters(data);
             }
-            this.xmlhttp.open(this.RequestMethod, this.RequestUrl + parameters, false);
-            this.xmlhttp.setRequestHeader("TimeStamp", new Date().getTime());
-            for (var key in this.Headers) {
-                this.xmlhttp.setRequestHeader(key, this.Headers[key]);
-            }
-            if (this.RequestMethod == "GET") {
-                this.xmlhttp.setRequestHeader("Content-type", "text/xml;charset=utf-8");
-                this.xmlhttp.send();
-            } else {
-                //以json的格式post
-                this.xmlhttp.setRequestHeader("Content-type", "application/json");
-                if (typeof (data) != "string") {
-                    this.xmlhttp.send(JSON.stringify(data));
-                } else {
-                    this.xmlhttp.send(data);
-                }
-            }
-            return this;
-        }
-
-
-
-        //发送请求
-        handler.AsyncSubmit = function (data) {
-            var parameters = "";
-            if (this.RequestMethod == "GET") {
-                parameters = DealGetParameters(data);
-            }
             this.xmlhttp.open(this.RequestMethod, this.RequestUrl + parameters, true);
             this.xmlhttp.setRequestHeader("TimeStamp", new Date().getTime());
+
+            if (this.ajaxType != "multipart/form-data;")
+            {
+                this.xmlhttp.setRequestHeader("Content-type", this.ajaxType);
+            }
             for (var key in this.Headers) {
                 this.xmlhttp.setRequestHeader(key, this.Headers[key]);
             }
+
             if (this.RequestMethod == "GET") {
-                this.xmlhttp.setRequestHeader("Content-type", "text/xml;charset=utf-8");
                 this.xmlhttp.send();
             } else {
-                this.xmlhttp.setRequestHeader("Content-type", "application/json");
-                if (typeof (data) != "string") {
-                    this.xmlhttp.send(JSON.stringify(data));
-                } else {
-                    this.xmlhttp.send(data);
-                }
+                this.xmlhttp.send(data);
             }
             return this;
         }
 
+        handler.TypeSubmit = function (data,index) {
+            if (index == 0) {
+                this.FormSubmit(data);
+            } else if (index == 1) {
+                this.JsonSubmit(data);
+            } else if (index == 2) {
+                this.PlainSubmit(data);
+            } else if (index == 3) {
+                this.XmlSubmit(data);
+            } else {
+                this.UJsonSubmit(data);
+            }
+        }
         return handler;
     }
 }
@@ -1622,8 +1664,16 @@ function GetNodeJson(nodeName, isClearJson, spicalDict) {
                 //获取数据
                 var data = node.getAttribute("out");
                 if (!IsNotNull(data)) {
-                    if (node.tagName == "INPUT" || node.tagName == "SELECT") {
+                    if (node.tagName == "SELECT") {
                         data = node.value;
+                    } else if (node.tagName == "INPUT") {
+                        if (node.getAttribute("type") == "file")
+                        {
+                            data = node.files[0];
+                        } else {
+                            data = node.value;
+                        }
+                        
                     } else {
                         data = node.innerHTML;
                     }
@@ -1663,8 +1713,15 @@ function GetNodeJson(nodeName, isClearJson, spicalDict) {
             }
             var data = node.getAttribute("out");
             if (!IsNotNull(data)) {
-                if (node.tagName == "INPUT") {
+                if (node.tagName == "SELECT") {
                     data = node.value;
+                } else if (node.tagName == "INPUT") {
+                    if (node.getAttribute("type") == "file") {
+                        data = node.files[0];
+                    } else {
+                        data = node.value;
+                    }
+
                 } else {
                     data = node.innerHTML;
                 }
